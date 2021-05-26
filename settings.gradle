@@ -1,0 +1,3 @@
+rootProject.name = "Beautiful Visualizer"
+include ':app'
+include ':beautifulvisualizer'

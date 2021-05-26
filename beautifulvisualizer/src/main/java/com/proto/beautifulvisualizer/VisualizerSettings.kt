@@ -1,0 +1,3 @@
+package com.proto.beautifulvisualizer
+
+abstract class VisualizerSettings
