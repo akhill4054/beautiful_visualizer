@@ -11,6 +11,8 @@ import androidx.core.content.ContextCompat
 import com.proto.beautifulvisualizer_example.R
 import com.proto.beautifulvisualizer_example.databinding.ActivityMainBinding
 
+private const val KEY_LAST_MEDIA_URI = "last_media_uri"
+
 class MainActivity : AppCompatActivity() {
 
     private lateinit var _binding: ActivityMainBinding
@@ -29,13 +31,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupViews() {
+        // Visualizer settings
+        val barVisualizer = _binding.barVisualizer
+        barVisualizer.settings.apply {
+            barFillColor = ContextCompat.getColor(this@MainActivity, R.color.purple_500)
+        }
+
         val getContent =
             registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
                 uri?.let {
-                    this._selectedMedia = uri
-                    enablePlayButton(true)
-                    // Update view
-                    _binding.selectedMedia.text = uri.toString()
+                    updateSelectedMedia(uri)
                 }
             }
 
@@ -99,14 +104,27 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun updateSelectedMedia(uri: Uri) {
+        this._selectedMedia = uri
+        enablePlayButton(true)
+        // Update view
+        _binding.selectedMedia.text = uri.toString()
+    }
+
     private fun playSong(mediaUri: Uri) {
         // Start playing the song
         _mediaPlayer = MediaPlayer.create(application, mediaUri)
         try {
-            _mediaPlayer!!.start()
+            val mediaPlayer = _mediaPlayer!!
+
+            // Plat the song
+            mediaPlayer.start()
+
+            // Seek!
+            mediaPlayer.seekTo(1000 * 45)
 
             // Start the visualization
-
+            _binding.barVisualizer.render(mediaPlayer.audioSessionId)
 
             // Update view
             _binding.playButton.setImageResource(R.drawable.ic_baseline_pause_circle_24)
@@ -147,8 +165,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun tryToStopMediaPlayer() {
         try {
+            // Stop visualization
+            _binding.barVisualizer.stop()
+
             _mediaPlayer?.stop()
             _mediaPlayer?.release()
+
+            _mediaPlayer = null
         } catch (e: Exception) {
             e.printStackTrace()
         }

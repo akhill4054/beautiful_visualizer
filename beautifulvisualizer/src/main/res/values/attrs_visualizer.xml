@@ -1,4 +1,6 @@
 <resources>
     <declare-styleable name="BarVisualizer">
+        <attr name="barFillColor" format="color" />
+        <attr name="numberOfBars" format="integer" />
     </declare-styleable>
 </resources>
