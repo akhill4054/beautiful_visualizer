@@ -10,4 +10,5 @@ package com.proto.beautifulvisualizer
  * */
 abstract class VisualizerSettings {
     abstract var velocity: Float
+    abstract var fps: Int
 }

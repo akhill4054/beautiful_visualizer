@@ -30,7 +30,6 @@ abstract class BaseVisualizer @JvmOverloads constructor(
     private var mLastAudioSessionId = -1
 
     private val mIsRendering = AtomicBoolean(false)
-
     val isRendering: Boolean get() = mIsRendering.get()
 
     @Volatile
@@ -47,9 +46,8 @@ abstract class BaseVisualizer @JvmOverloads constructor(
     protected var mCanvasWidth = 0F
     protected var mCanvasHeight = 0F
 
-    protected var mIdealVelocity = 0F
-
-    protected var mFPS = 60
+    protected var mIdealVelocity = 1F
+    protected var mFPS = 30
 
     private fun visualize(audioSessionId: Int) {
         mVisualizer?.release()
@@ -111,7 +109,14 @@ abstract class BaseVisualizer @JvmOverloads constructor(
 
         // Init fields before rendering
         if (!::_values.isInitialized || _values.size != mLastAudioSessionId) {
-            _values = IntArray(mNumberOfExpectedValues) { mNumberOfExpectedValues }
+            _values = IntArray(mNumberOfExpectedValues) {
+                -128 // As it will become 0 inside the renderer.
+            }
+        } else {
+            // Reset values
+            for (i in _values.indices) {
+                _values[i] = -128
+            }
         }
 
         // Update velocity for values
@@ -125,6 +130,14 @@ abstract class BaseVisualizer @JvmOverloads constructor(
         mVisualizer!!.enabled = true
 
         renderer.start()
+    }
+
+    fun pause() {
+        stop()
+    }
+
+    fun resume() {
+        render(mLastAudioSessionId)
     }
 
     open fun stop() {
@@ -155,6 +168,7 @@ abstract class BaseVisualizer @JvmOverloads constructor(
 
             _rendererThread = Thread {
 
+                // Init necessary fields before rendering
                 val idealFrameRenderingTime = 1000L / mFPS
                 var lastFrameTimestamp = System.currentTimeMillis()
 
@@ -163,21 +177,12 @@ abstract class BaseVisualizer @JvmOverloads constructor(
                 currentValues =
                     lastProvidedValues.copyOf()
 
+                // Start the rendering
                 while (true) {
                     if (!isRendering) break
+                    if (!holder.surface.isValid) continue
 
-                    val canvas = holder.lockCanvas()
-
-                    if (canvas == null) {
-                        try {
-                            // Free the lock
-                            holder.unlockCanvasAndPost(canvas)
-                            stop()
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                        break
-                    }
+                    val canvas = holder.lockCanvas() ?: continue
 
                     // Clear canvas
                     canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
@@ -188,7 +193,6 @@ abstract class BaseVisualizer @JvmOverloads constructor(
                             lastProvidedValues[i] = _values[i].toFloat()
                         }
                     }
-                    Log.d(TAG, "start: running...")
 
                     for (i in lastProvidedValues.indices) {
                         // Justify local provided values

@@ -11,11 +11,18 @@ import com.proto.beautifulvisualizer.VisualizerSettings
  * @see VisualizerSettings.velocity
  * */
 class BarVisualizerSettings(
-    var numberOfBars: Int = 33,
+    var numberOfBars: Int = 40,
     var barWidth: Float = 0.8F,
-    var maxBarHeight: Float = 1.1F,
+    var maxBarHeight: Float = 0.8F,
+    var isRoundedCorners: Boolean = true,
     var isAcceleratedModeOn: Boolean = true,
     @ColorInt
     var barFillColor: Int = Color.CYAN,
-    override var velocity: Float = 1.5F
+    var isRainbowMode: Boolean = false,
+    @ColorInt
+    var rainbowColors: IntArray? = null,
+    var isDynamicRainbow: Boolean = false,
+    var dynamicRainbowVelocity: Float = 0.2F,
+    override var velocity: Float = 1.1F,
+    override var fps: Int = 30,
 ) : VisualizerSettings()
