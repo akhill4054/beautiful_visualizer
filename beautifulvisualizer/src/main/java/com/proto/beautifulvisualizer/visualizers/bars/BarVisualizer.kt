@@ -97,7 +97,7 @@ class BarVisualizer @kotlin.jvm.JvmOverloads constructor(
     }
 
     private fun setupRainbowMode() {
-        if (settings.isDynamicRainbow) {
+        if (settings.isRainbowMode) {
             val fillColors = settings.rainbowColors
 
             if (fillColors == null || fillColors.isEmpty()) {
@@ -149,55 +149,6 @@ class BarVisualizer @kotlin.jvm.JvmOverloads constructor(
         reflectSettings()
 
         super.render(audioSessionId)
-    }
-
-    init {
-        // Test drawing
-        post {
-            if (true) return@post
-            val canvas = holder.lockCanvas()
-
-            val values = Array(10) { 0F }
-            for (i in values.indices) {
-                values[i] = Random.nextFloat() + 0.2F
-            }
-
-            val spanWidth = mCanvasWidth / values.size
-            val barWidth = spanWidth * 0.8F
-            val leftOffset = spanWidth - barWidth
-            val maxH = mCanvasHeight * 0.8F
-
-            val bgBitmap = Bitmap.createBitmap(
-                mCanvasWidth.toInt(), mCanvasHeight.toInt(), Bitmap.Config.ARGB_8888
-            )
-
-            val bgCanvas = Canvas(bgBitmap)
-
-            val blurPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-            blurPaint.maskFilter = BlurMaskFilter(
-                100F, BlurMaskFilter.Blur.INNER
-            )
-
-            _capFillPaint.color = Color.WHITE
-
-            for (i in values.indices) {
-                val barH = maxH * values[i]
-                val left = leftOffset + i * spanWidth
-
-                bgCanvas.drawRect(
-                    left,
-                    mCanvasHeight - barH,
-                    left + barWidth,
-                    mCanvasHeight,
-                    _capFillPaint
-                )
-            }
-
-            // Draw bg on canvas with blur
-            canvas.drawBitmap(bgBitmap, 0F, 0F, blurPaint)
-
-            holder.unlockCanvasAndPost(canvas)
-        }
     }
 
     override fun updateFrame(values: FloatArray, canvas: Canvas) {

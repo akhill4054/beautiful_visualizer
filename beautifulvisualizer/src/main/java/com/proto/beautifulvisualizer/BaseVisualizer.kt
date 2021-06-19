@@ -7,13 +7,10 @@ import android.graphics.PixelFormat
 import android.graphics.PorterDuff
 import android.media.audiofx.Visualizer
 import android.util.AttributeSet
-import android.util.Log
 import android.view.SurfaceView
 import java.lang.Thread.sleep
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.random.Random
-
-private const val TAG = "BaseVisualizer"
 
 abstract class BaseVisualizer @JvmOverloads constructor(
     context: Context,
@@ -150,7 +147,9 @@ abstract class BaseVisualizer @JvmOverloads constructor(
 
     open fun restart() {
         stop()
-        render(mLastAudioSessionId)
+        if (mLastAudioSessionId != -1) {
+            render(mLastAudioSessionId)
+        }
     }
 
     private inner class Renderer {
@@ -235,10 +234,6 @@ abstract class BaseVisualizer @JvmOverloads constructor(
                         if (sleepTime > 0) {
                             sleep(sleepTime)
                         }
-                        Log.d(
-                            TAG,
-                            "start: fps = ${1000 / frameRenderingTime}, sleep = $sleepTime"
-                        )
                     }
 
                     lastFrameTimestamp = currTime

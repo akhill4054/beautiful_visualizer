@@ -10,10 +10,18 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.databinding.DataBindingUtil
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.material.slider.Slider
 import com.proto.beautifulvisualizer_example.R
 import com.proto.beautifulvisualizer_example.databinding.ActivityMainBinding
+
+// Player state
+sealed class PlayerState
+object Ideal : PlayerState()
+object Playing : PlayerState()
+object Paused : PlayerState()
 
 class MainActivity : AppCompatActivity() {
 
@@ -39,9 +47,10 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        _binding = ActivityMainBinding.inflate(layoutInflater)
-        val view = _binding.root
-        setContentView(view)
+        _binding = DataBindingUtil.setContentView(
+            this,
+            R.layout.activity_main
+        )
 
         _player = SimpleExoPlayer.Builder(this).build()
 
@@ -49,12 +58,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupViews() {
+        // Init data-binding fields
+        _binding.noMediaSelected = true
+        _binding.playerState = Ideal
+
         // Visualizer settings
         val barVisualizer = _binding.barVisualizer
         barVisualizer.settings.apply {
             barFillColor =
                 ContextCompat.getColor(this@MainActivity, R.color.purple_500)
-            isRainbowMode = true
+            isRainbowMode = _binding.rainbowMode.isChecked
             rainbowColors = intArrayOf(
                 Color.parseColor("#302deb"),
                 Color.parseColor("#732deb"),
@@ -64,8 +77,14 @@ class MainActivity : AppCompatActivity() {
                 Color.parseColor("#eb2d5d"),
                 Color.parseColor("#4e10c2"),
             )
-            isDynamicRainbow = true
-            isRoundedCorners = false
+            isDynamicRainbow = _binding.dynamicRainbow.isChecked
+            isRoundedCorners = _binding.roundedCorners.isChecked
+
+            numberOfBars = _binding.numberOfBars.value.toInt()
+            barWidth = _binding.barWidth.value
+            velocity = _binding.barVelocity.value
+            fps = _binding.fps.value.toInt()
+            dynamicRainbowVelocity = _binding.dynamicRainbowVelocity.value
         }
 
         val getContent =
@@ -109,10 +128,74 @@ class MainActivity : AppCompatActivity() {
         // Start seekBar update
         _seekBarHandler.post(_seekBarRunnable)
 
+        val reflectSettings = { barVisualizer.restart() }
+        val getVisualizerSettings = { barVisualizer.settings }
+
+        // Visualizer setting controls
+        _binding.roundedCorners.setOnCheckedChangeListener { _, isChecked ->
+            getVisualizerSettings().isRoundedCorners = isChecked
+            reflectSettings()
+        }
+        _binding.rainbowMode.setOnCheckedChangeListener { _, isChecked ->
+            getVisualizerSettings().isRainbowMode = isChecked
+            reflectSettings()
+        }
+        _binding.dynamicRainbow.setOnCheckedChangeListener { _, isChecked ->
+            getVisualizerSettings().isDynamicRainbow = isChecked
+            reflectSettings()
+        }
+        _binding.numberOfBars.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
+            override fun onStartTrackingTouch(slider: Slider) {
+            }
+
+            override fun onStopTrackingTouch(slider: Slider) {
+                getVisualizerSettings().numberOfBars = slider.value.toInt()
+                reflectSettings()
+            }
+        })
+        _binding.fps.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
+            override fun onStartTrackingTouch(slider: Slider) {
+            }
+
+            override fun onStopTrackingTouch(slider: Slider) {
+                getVisualizerSettings().fps = slider.value.toInt()
+                reflectSettings()
+            }
+        })
+        _binding.barWidth.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
+            override fun onStartTrackingTouch(slider: Slider) {
+            }
+
+            override fun onStopTrackingTouch(slider: Slider) {
+                getVisualizerSettings().barWidth = slider.value
+                reflectSettings()
+            }
+        })
+
+        _binding.barVelocity.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
+            override fun onStartTrackingTouch(slider: Slider) {
+            }
+
+            override fun onStopTrackingTouch(slider: Slider) {
+                getVisualizerSettings().velocity = slider.value
+                reflectSettings()
+            }
+        })
+        _binding.dynamicRainbowVelocity.addOnSliderTouchListener(object :
+            Slider.OnSliderTouchListener {
+            override fun onStartTrackingTouch(slider: Slider) {
+            }
+
+            override fun onStopTrackingTouch(slider: Slider) {
+                getVisualizerSettings().dynamicRainbowVelocity = slider.value
+                reflectSettings()
+            }
+        })
+
         // Click listeners
         _binding.pickASong.setOnClickListener {
             if (_player.isPlaying) {
-                stop()
+                stopPlayer()
             }
             if (ContextCompat.checkSelfPermission(
                     this,
@@ -130,10 +213,7 @@ class MainActivity : AppCompatActivity() {
             _selectedMedia?.let {
                 if (_player.isPlaying) {
                     _player.pause()
-                    // Update view
-                    _binding.playButton.setImageResource(
-                        R.drawable.ic_baseline_play_circle_24
-                    )
+                    _binding.playerState = Paused
                 } else if (_player.currentMediaItem != null) {
                     playSong()
                 } else {
@@ -169,8 +249,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateSelectedMedia(uri: Uri) {
-        // Reset media player
-        _player.stop()
+        // Stop the player
+        stopPlayer()
 
         // Update player media
         val mediaItem = MediaItem.fromUri(uri)
@@ -178,13 +258,9 @@ class MainActivity : AppCompatActivity() {
 
         _selectedMedia = uri
 
-        enableMediaControls(true)
-
         // Update UI
+        _binding.noMediaSelected = false
         _binding.selectedMedia.text = uri.toString()
-        _binding.playButton.setBackgroundResource(
-            R.drawable.ic_baseline_play_circle_24
-        )
     }
 
     private fun playSong() {
@@ -196,30 +272,11 @@ class MainActivity : AppCompatActivity() {
         _binding.barVisualizer.render(_player.audioSessionId)
 
         // Update view
-        _binding.playButton.setImageResource(R.drawable.ic_baseline_pause_circle_24)
+        _binding.playerState = Playing
     }
 
-    private fun enableMediaControls(isEnabled: Boolean) {
-        _binding.run {
-            if (isEnabled) {
-                playButton.alpha = 1F
-                playButton.isClickable = true
-
-                seekBar.isEnabled = true
-            } else {
-                playButton.alpha = 0.5F
-                playButton.isClickable = false
-                playButton.setBackgroundResource(R.drawable.ic_baseline_play_circle_24)
-
-                seekBar.value = 0F
-                seekBar.isEnabled = false
-            }
-        }
-    }
-
-    private fun stop() {
-        // UI
-        enableMediaControls(false)
+    private fun stopPlayer() {
+        _binding.playerState = Ideal
         _player.stop()
     }
 

@@ -3,4 +3,12 @@
     <string name="no_media_selected">No media selected</string>
     <string name="pick_a_song">Pick a song</string>
     <string name="play_button">Play button</string>
+    <string name="rounded_corners">Rounded corners</string>
+    <string name="rainbow_mode">Rainbow mode</string>
+    <string name="number_of_bars">Number of bars</string>
+    <string name="bar_velocity">Bar velocity</string>
+    <string name="dynamic_rainbow_velocity">Dynamic Rainbow velocity</string>
+    <string name="bar_width">Bar width</string>
+    <string name="dynamic_rainbow">Dynamic rainbow</string>
+    <string name="fps">FPS</string>
 </resources>

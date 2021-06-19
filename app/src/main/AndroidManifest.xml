@@ -15,7 +15,11 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.BeautifulVisualizer">
-        <activity android:name="com.proto.beautifulvisualizer_exmple.MainActivity">
+
+        <activity
+            android:name="com.proto.beautifulvisualizer_exmple.MainActivity"
+            android:screenOrientation="portrait"
+            android:resizeableActivity="false">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
