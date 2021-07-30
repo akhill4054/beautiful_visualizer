@@ -7,7 +7,6 @@ import androidx.annotation.ColorInt
 import androidx.core.graphics.ColorUtils
 import com.proto.beautifulvisualizer.BaseVisualizer
 import com.proto.beautifulvisualizer.R
-import kotlin.random.Random
 
 class BarVisualizer @kotlin.jvm.JvmOverloads constructor(
     context: Context,
@@ -139,7 +138,6 @@ class BarVisualizer @kotlin.jvm.JvmOverloads constructor(
             }
         } else {
             // Just in case
-            _rainbowFillColors = null
             settings.isDynamicRainbow = false
         }
     }
