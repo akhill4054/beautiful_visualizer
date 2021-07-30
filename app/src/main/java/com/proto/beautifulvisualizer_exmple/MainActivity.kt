@@ -57,6 +57,7 @@ class MainActivity : AppCompatActivity() {
         setupViews()
     }
 
+    // Beginning of the experiment
     private fun setupViews() {
         // Init data-binding fields
         _binding.noMediaSelected = true
@@ -76,6 +77,13 @@ class MainActivity : AppCompatActivity() {
                 Color.parseColor("#60eb2d"),
                 Color.parseColor("#eb2d5d"),
                 Color.parseColor("#4e10c2"),
+                Color.parseColor("#302de1"),
+                Color.parseColor("#732de2"),
+                Color.parseColor("#8c2de3"),
+                Color.parseColor("#cb2de4"),
+                Color.parseColor("#60eb25"),
+                Color.parseColor("#eb2d56"),
+                Color.parseColor("#4e10c7"),
             )
             isDynamicRainbow = _binding.dynamicRainbow.isChecked
             isRoundedCorners = _binding.roundedCorners.isChecked
